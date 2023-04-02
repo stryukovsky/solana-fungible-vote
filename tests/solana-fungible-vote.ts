@@ -75,7 +75,7 @@ describe("solana-fungible-vote", () => {
     });
 
     const quorum = new anchor.BN(2000);
-    const votingUntil = new anchor.BN(5 + Math.round((new Date().getTime()) / 1000));
+    const votingUntil = new anchor.BN(1 + Math.round((new Date().getTime()) / 1000));
     it("should start a new voting", async () => {
         const votingTokenAccount = await getAssociatedTokenAddress(mint.publicKey, votingAccount.publicKey);
         await program.methods.initializeVoting(quorum, votingUntil).accounts({
@@ -147,14 +147,13 @@ describe("solana-fungible-vote", () => {
     });
 
     it("should finish voting", async () => {
-        setTimeout(async () => {
-            const votingTokenAccount = await getAssociatedTokenAddress(mint.publicKey, votingAccount.publicKey);
-            await program.methods.finishVoting().accounts({
-                votingAccount: votingAccount.publicKey,
-                votingTokenAccount,
-                adminAccount: adminAccount.publicKey,
-            }).rpc();
-        }, 5);
-
+        const votingTokenAccount = await getAssociatedTokenAddress(mint.publicKey, votingAccount.publicKey);
+        await program.methods.finishVoting().accounts({
+            votingAccount: votingAccount.publicKey,
+            votingTokenAccount,
+            adminAccount: adminAccount.publicKey,
+        }).rpc();
+        const voting = await program.account.voting.fetch(votingAccount.publicKey);
+        expect(voting.isApplied).eq(true);
     });
 });
